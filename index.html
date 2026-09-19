@@ -6,6 +6,7 @@
     <title>cogie0806天気</title>
     <link rel="icon" href="cogie0806.jpg" type="image/jpeg">
     <style>
+        /* スマホに最適化されたモダンなカードデザイン */
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', Meiryo, sans-serif;
             background: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%);
@@ -43,7 +44,7 @@
         select {
             width: 100%;
             padding: 14px 16px;
-            font-size: 16px;
+            font-size: 16px; /* スマホで勝手にズームされないジャストサイズ */
             border-radius: 14px;
             border: 1px solid #e5e5ea;
             margin-bottom: 16px;
@@ -83,7 +84,7 @@
             box-shadow: 0 4px 12px rgba(0,0,0,0.02);
             display: flex;
             flex-direction: column;
-            gap: 4px;
+            gap: 6px;
         }
         .date {
             font-size: 14px;
@@ -96,17 +97,42 @@
             color: #1d1d1f;
             display: flex;
             align-items: center;
-            margin: 2px 0;
         }
         .temp-container {
             display: flex;
             gap: 12px;
             font-size: 14px;
             font-weight: 600;
-            margin-top: 2px;
         }
         .max-temp { color: #ff3b30; }
         .min-temp { color: #0071e3; }
+        .detail-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-top: 4px;
+            padding-top: 8px;
+            border-top: 1px dashed #e5e5ea;
+            font-size: 13px;
+            color: #515154;
+        }
+        .detail-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .advice-box {
+            margin-top: 6px;
+            padding: 8px 12px;
+            background-color: #f5f5f7;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #1d1d1f;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
     </style>
 </head>
 <body>
@@ -182,7 +208,7 @@
     </div>
 
     <script>
-        // 画面が開いた瞬間に、記憶されている都道府県があれば自動で表示するプログラム
+        // 画面が開いた瞬間に記憶された都道府県を自動表示するプログラム
         window.onload = function() {
             const savedArea = localStorage.getItem('savedAreaCode');
             if (savedArea) {
@@ -200,7 +226,6 @@
                 return;
             }
 
-            // 【新機能】選んだ場所のエリアコードをスマホのメモリに記憶
             localStorage.setItem('savedAreaCode', areaCode);
 
             const data = weatherDatabase[areaCode];
@@ -209,6 +234,15 @@
             for (let i = 0; i < data.forecasts.length; i++) {
                 const f = data.forecasts[i];
                 const dateText = getFutureDateText(i);
+                
+                let adviceText = "快適に過ごせる一日になりそうです。";
+                if (f.w.includes("雨") || f.w.includes("☔") || f.w.includes("⛈️")) {
+                    adviceText = "お出かけには傘を持っていこう！☔";
+                } else if (f.w.includes("晴") || f.w.includes("☀️")) {
+                    adviceText = "絶好の洗濯物干しチャンスです！☀️";
+                } else if (f.w.includes("くもり") || f.w.includes("☁️")) {
+                    adviceText = "折りたたみ傘があると安心です。☁️";
+                }
 
                 htmlContent += `
                     <div class="weather-box">
@@ -218,6 +252,13 @@
                             <span class="max-temp">📈 最高: ${f.max}°C</span>
                             <span class="min-temp">📉 最低: ${f.min}°C</span>
                         </div>
+                        <div class="detail-container">
+                            <div class="detail-item">💧 湿度: ${f.rh}%</div>
+                            <div class="detail-item">☔ 降水量: ${f.pr}mm</div>
+                            <div class="detail-item">🧭 風向: ${f.wd}</div>
+                            <div class="detail-item">💨 風速: ${f.ws}m/s</div>
+                        </div>
+                        <div class="advice-box">💡 ${adviceText}</div>
                     </div>
                 `;
             }
@@ -231,55 +272,57 @@
             const days = ["日", "月", "火", "水", "木", "金", "土"];
             return `${dateObj.getMonth() + 1}月${dateObj.getDate()}日(${days[dateObj.getDay()]})`;
         }
-        // 47都道府県すべてのリアルな気象データを完全格納しました！
+
+        // 47都道府県の詳細なデータベース（前半：北海道〜兵庫県）
         const weatherDatabase = {
-            "016000": { name: "北海道（札幌）", forecasts: [{ w: "晴れ時々曇り ⛅", max: "21", min: "13" }, { w: "くもり ☁️", max: "19", min: "11" }, { w: "雨のち晴れ 🌧️", max: "17", min: "10" }] },
-            "020000": { name: "青森県", forecasts: [{ w: "晴れ時々曇り ⛅", max: "22", min: "14" }, { w: "くもり ☁️", max: "20", min: "13" }, { w: "晴れ ☀️", max: "23", min: "15" }] },
-            "030000": { name: "岩手県", forecasts: [{ w: "晴れ ☀️", max: "23", min: "13" }, { w: "くもり ☁️", max: "21", min: "12" }, { w: "晴れ時々曇り ⛅", max: "24", min: "14" }] },
-            "040000": { name: "宮城県（仙台）", forecasts: [{ w: "晴れ ☀️", max: "24", min: "16" }, { w: "くもり ☁️", max: "22", min: "15" }, { w: "晴れ時々曇り ⛅", max: "25", min: "17" }] },
-            "050000": { name: "秋田県", forecasts: [{ w: "晴れ時々曇り ⛅", max: "23", min: "15" }, { w: "くもり ☁️", max: "21", min: "14" }, { w: "晴れ ☀️", max: "24", min: "16" }] },
-            "060000": { name: "山形県", forecasts: [{ w: "晴れ ☀️", max: "25", min: "14" }, { w: "くもり ☁️", max: "22", min: "13" }, { w: "晴れ時々曇り ⛅", max: "26", min: "15" }] },
-            "070000": { name: "福島県", forecasts: [{ w: "晴れ ☀️", max: "25", min: "15" }, { w: "くもり時々晴れ ⛅", max: "23", min: "14" }, { w: "晴れ ☀️", max: "26", min: "16" }] },
-            "080000": { name: "茨城県", forecasts: [{ w: "くもり ☁️", max: "25", min: "19" }, { w: "雨のち曇り 🌧️", max: "23", min: "18" }, { w: "曇り時々晴れ ⛅", max: "26", min: "20" }] },
-            "090000": { name: "栃木県", forecasts: [{ w: "くもり ☁️", max: "26", min: "18" }, { w: "雨 🌧️", max: "23", min: "17" }, { w: "晴れ時々曇り ⛅", max: "27", min: "19" }] },
-            "100000": { name: "群馬県", forecasts: [{ w: "くもり ☁️", max: "26", min: "18" }, { w: "雨 🌧️", max: "22", min: "17" }, { w: "晴れ ☀️", max: "28", min: "19" }] },
-            "110000": { name: "埼玉県", forecasts: [{ w: "くもり ☁️", max: "26", min: "19" }, { w: "雨 所により雷を伴う ⛈️", max: "23", min: "19" }, { w: "晴れ時々曇り ⛅", max: "28", min: "20" }] },
-            "120000": { name: "千葉県", forecasts: [{ w: "くもり ☁️", max: "26", min: "21" }, { w: "雨 🌧️", max: "24", min: "20" }, { w: "曇り時々晴れ ⛅", max: "27", min: "21" }] },
-            "130000": { name: "東京都", forecasts: [{ w: "くもり 夜のはじめ頃 雨 🌧️", max: "26", min: "21" }, { w: "雨 朝から雷を伴い激しく降る ⛈️", max: "24", min: "20" }, { w: "大雨のち曇り ☔", max: "23", min: "19" }] },
-            "140000": { name: "神奈川県", forecasts: [{ w: "くもり ☁️", max: "26", min: "21" }, { w: "雨 🌧️", max: "24", min: "20" }, { w: "曇りのち晴れ ⛅", max: "27", min: "21" }] },
-            "150000": { name: "新潟県", forecasts: [{ w: "晴れ時々曇り ⛅", max: "26", min: "18" }, { w: "くもり時々雨 🌧️", max: "23", min: "17" }, { w: "快晴 ☀️", max: "27", min: "18" }] },
-            "160000": { name: "富山県", forecasts: [{ w: "晴れ ☀️", max: "27", min: "18" }, { w: "くもり ☁️", max: "24", min: "17" }, { w: "快晴 ☀️", max: "28", min: "18" }] },
-            "170000": { name: "石川県", forecasts: [{ w: "晴れ ☀️", max: "27", min: "19" }, { w: "くもり ☁️", max: "24", min: "18" }, { w: "快晴 ☀️", max: "28", min: "19" }] },
-            "180000": { name: "福井県", forecasts: [{ w: "晴れ時々曇り ⛅", max: "28", min: "19" }, { w: "くもり ☁️", max: "25", min: "18" }, { w: "晴れ ☀️", max: "29", min: "19" }] },
-            "190000": { name: "山梨県", forecasts: [{ w: "くもり ☁️", max: "25", min: "17" }, { w: "雨 🌧️", max: "22", min: "16" }, { w: "晴れ時々曇り ⛅", max: "27", min: "18" }] },
-            "200000": { name: "長野県", forecasts: [{ w: "晴れ時々曇り ⛅", max: "25", min: "15" }, { w: "くもり時々雨 🌧️", max: "21", min: "14" }, { w: "晴れ ☀️", max: "26", min: "15" }] },
-            "210000": { name: "岐阜県", forecasts: [{ w: "晴れ ☀️", max: "28", min: "18" }, { w: "くもり時々雨 🌧️", max: "24", min: "17" }, { w: "快晴 ☀️", max: "29", min: "18" }] },
-            "220000": { name: "静岡県", forecasts: [{ w: "くもり ☁️", max: "27", min: "20" }, { w: "雨 🌧️", max: "24", min: "19" }, { w: "曇りのち晴れ ⛅", max: "28", min: "20" }] },
-            "230000": { name: "愛知県（名古屋）", forecasts: [{ w: "晴れ ☀️", max: "28", min: "20" }, { w: "曇り時々雨 🌦️", max: "25", min: "19" }, { w: "快晴 ☀️", max: "29", min: "18" }] },
-            "240000": { name: "三重県", forecasts: [{ w: "晴れ時々曇り ⛅", max: "28", min: "19" }, { w: "くもり ☁️", max: "25", min: "19" }, { w: "晴れ ☀️", max: "29", min: "18" }] },
-            "250000": { name: "滋賀県", forecasts: [{ w: "晴れ ☀️", max: "28", min: "18" }, { w: "くもり ☁️", max: "25", min: "18" }, { w: "快晴 ☀️", max: "29", min: "17" }] },
-            "260000": { name: "京都府", forecasts: [{ w: "晴れ ☀️", max: "29", min: "19" }, { w: "くもり ☁️", max: "26", min: "19" }, { w: "快晴 ☀️", max: "30", min: "18" }] },
-            "270000": { name: "大阪府", forecasts: [{ w: "晴れ時々曇り ⛅", max: "29", min: "22" }, { w: "くもり ☁️", max: "27", min: "21" }, { w: "雨 🌧️", max: "24", min: "19" }] },
-            "280000": { name: "兵庫県", forecasts: [{ w: "晴れ ☀️", max: "29", min: "21" }, { w: "くもり ☁️", max: "26", min: "20" }, { w: "晴れ時々曇り ⛅", max: "28", min: "19" }] },
-            "290000": { name: "奈良県", forecasts: [{ w: "晴れ時々曇り ⛅", max: "28", min: "18" }, { w: "くもり ☁️", max: "27", min: "18" }, { w: "晴れ時々曇り ⛅", max: "28", min: "17" }] },
-            "300000": { name: "和歌山県", forecasts: [{ w: "晴れ ☀️", max: "29", min: "20" }, { w: "くもり ☁️", max: "26", min: "20" }, { w: "晴れ時々曇り ⛅", max: "29", min: "19" }] },
-            "310000": { name: "鳥取県", forecasts: [{ w: "晴れ ☀️", max: "28", min: "18" }, { w: "くもり ☁️", max: "25", min: "17" }, { w: "快晴 ☀️", max: "28", min: "17" }] },
-            "320000": { name: "島根県", forecasts: [{ w: "晴れ時々曇り ⛅", max: "28", min: "19" }, { w: "くもり ☁️", max: "25", min: "18" }, { w: "晴れ ☀️", max: "28", min: "18" }] },
-            "330000": { name: "岡山県", forecasts: [{ w: "快晴 ☀️", max: "30", min: "19" }, { w: "晴れのち曇り ⛅", max: "28", min: "19" }, { w: "くもり ☁️", max: "26", min: "18" }] },
-            "340000": { name: "広島県", forecasts: [{ w: "快晴 ☀️", max: "30", min: "21" }, { w: "晴れのち曇り ⛅", max: "28", min: "20" }, { w: "くもり ☁️", max: "26", min: "18" }] },
-            "350000": { name: "山口県", forecasts: [{ w: "晴れ ☀️", max: "29", min: "20" }, { w: "くもり ☁️", max: "26", min: "19" }, { w: "晴れ ⛅", max: "28", min: "18" }] },
-            "360000": { name: "徳島県", forecasts: [{ w: "晴れ ☀️", max: "28", min: "20" }, { w: "くもり時々雨 🌧️", max: "25", min: "20" }, { w: "晴れ ⛅", max: "28", min: "19" }] },
-            "370000": { name: "香川県", forecasts: [{ w: "晴れ ☀️", max: "29", min: "21" }, { w: "くもり時々雨 🌧️", max: "26", min: "20" }, { w: "晴れ ⛅", max: "28", min: "18" }] },
-            "380000": { name: "愛媛県", forecasts: [{ w: "晴れ時々曇り ⛅", max: "29", min: "20" }, { w: "くもり ☁️", max: "26", min: "19" }, { w: "快晴 ☀️", max: "29", min: "18" }] },
-            "390000": { name: "高知県", forecasts: [{ w: "快晴 ☀️", max: "30", min: "20" }, { w: "曇りのち雨 🌧️", max: "27", min: "20" }, { w: "晴れ ⛅", max: "29", min: "19" }] },
-            "400000": { name: "福岡県", forecasts: [{ w: "くもり時々晴れ ⛅", max: "28", min: "22" }, { w: "雨のち曇り 🌧️", max: "24", min: "19" }, { w: "快晴 ☀️", max: "29", min: "18" }] },
-            "410000": { name: "佐賀県", forecasts: [{ w: "晴れ時々曇り ⛅", max: "29", min: "21" }, { w: "雨のち晴れ 🌧️", max: "25", min: "20" }, { w: "快晴 ☀️", max: "29", min: "19" }] },
-            "420000": { name: "長崎県", forecasts: [{ w: "くもり時々晴れ ⛅", max: "28", min: "22" }, { w: "雨 🌧️", max: "25", min: "21" }, { w: "晴れ ☀️", max: "29", min: "20" }] },
-            "430000": { name: "熊本県", forecasts: [{ w: "晴れ ☀️", max: "30", min: "21" }, { w: "雨のち曇り 🌧️", max: "26", min: "20" }, { w: "快晴 ☀️", max: "30", min: "19" }] },
-            "440000": { name: "大分県", forecasts: [{ w: "晴れ時々曇り ⛅", max: "28", min: "20" }, { w: "くもり時々雨 🌧️", max: "25", min: "19" }, { w: "晴れ ☀️", max: "29", min: "18" }] },
-            "450000": { name: "宮崎県", forecasts: [{ w: "快晴 ☀️", max: "30", min: "21" }, { w: "曇りのち雨 🌧️", max: "27", min: "21" }, { w: "晴れ ⛅", max: "29", min: "20" }] },
-            "460000": { name: "鹿児島県", forecasts: [{ w: "晴れ ☀️", max: "30", min: "23" }, { w: "雨のち曇り 🌧️", max: "27", min: "22" }, { w: "快晴 ☀️", max: "31", min: "21" }] },
-            "470000": { name: "沖縄県（那覇）", forecasts: [{ w: "晴れ時々くもり ⛅", max: "32", min: "27" }, { w: "スコールあり 🌦️", max: "31", min: "26" }, { w: "快晴 ☀️", max: "33", min: "27" }] }
+            "016000": { name: "北海道（札幌）", forecasts: [{ w: "晴れ時々曇り ⛅", max: "21", min: "13", rh: "65", pr: "0", wd: "北西", ws: "3.2" }, { w: "くもり ☁️", max: "19", min: "11", rh: "75", pr: "0", wd: "北", ws: "2.5" }, { w: "雨のち晴れ 🌧️", max: "17", min: "10", rh: "85", pr: "4", wd: "南西", ws: "4.0" }] },
+            "020000": { name: "青森県", forecasts: [{ w: "晴れ時々曇り ⛅", max: "22", min: "14", rh: "68", pr: "0", wd: "西", ws: "2.8" }, { w: "くもり ☁️", max: "20", min: "13", rh: "72", pr: "0", wd: "北西", ws: "2.1" }, { w: "晴れ ☀️", max: "23", min: "15", rh: "60", pr: "0", wd: "南", ws: "3.5" }] },
+            "030000": { name: "岩手県", forecasts: [{ w: "晴れ ☀️", max: "23", min: "13", rh: "60", pr: "0", wd: "西", ws: "2.5" }, { w: "くもり ☁️", max: "21", min: "12", rh: "70", pr: "0", wd: "北", ws: "1.8" }, { w: "晴れ時々曇り ⛅", max: "24", min: "14", rh: "65", pr: "0", wd: "南東", ws: "2.2" }] },
+            "040000": { name: "宮城県（仙台）", forecasts: [{ w: "晴れ ☀️", max: "24", min: "16", rh: "62", pr: "0", wd: "西", ws: "3.0" }, { w: "くもり ☁️", max: "22", min: "15", rh: "75", pr: "0", wd: "北西", ws: "2.0" }, { w: "晴れ時々曇り ⛅", max: "25", min: "17", rh: "64", pr: "0", wd: "南", ws: "2.8" }] },
+            "050000": { name: "秋田県", forecasts: [{ w: "晴れ時々曇り ⛅", max: "23", min: "15", rh: "66", pr: "0", wd: "北西", ws: "2.7" }, { w: "くもり ☁️", max: "21", min: "14", rh: "73", pr: "0", wd: "北", ws: "2.2" }, { w: "晴れ ☀️", max: "24", min: "16", rh: "61", pr: "0", wd: "南西", ws: "3.1" }] },
+            "060000": { name: "山形県", forecasts: [{ w: "晴れ ☀️", max: "25", min: "14", rh: "58", pr: "0", wd: "西", ws: "2.3" }, { w: "くもり ☁️", max: "22", min: "13", rh: "68", pr: "0", wd: "北西", ws: "1.9" }, { w: "晴れ時々曇り ⛅", max: "26", min: "15", rh: "62", pr: "0", wd: "南", ws: "2.6" }] },
+            "070000": { name: "福島県", forecasts: [{ w: "晴れ ☀️", max: "25", min: "15", rh: "59", pr: "0", wd: "西北西", ws: "2.4" }, { w: "くもり時々晴れ ⛅", max: "23", min: "14", rh: "65", pr: "0", wd: "北", ws: "2.0" }, { w: "晴れ ☀️", max: "26", min: "16", rh: "57", pr: "0", wd: "南東", ws: "2.5" }] },
+            "080000": { name: "茨城県", forecasts: [{ w: "くもり ☁️", max: "25", min: "19", rh: "74", pr: "0", wd: "北東", ws: "3.5" }, { w: "雨のち曇り 🌧️", max: "23", min: "18", rh: "88", pr: "5", wd: "北東", ws: "4.2" }, { w: "曇り時々晴れ ⛅", max: "26", min: "20", rh: "78", pr: "0", wd: "東", ws: "2.9" }] },
+            "090000": { name: "栃木県", forecasts: [{ w: "くもり ☁️", max: "26", min: "18", rh: "72", pr: "0", wd: "北", ws: "2.2" }, { w: "雨 🌧️", max: "23", min: "17", rh: "86", pr: "8", wd: "北東", ws: "3.0" }, { w: "晴れ時々曇り ⛅", max: "27", min: "19", rh: "70", pr: "0", wd: "南東", ws: "2.1" }] },
+            "100000": { name: "群馬県", forecasts: [{ w: "くもり ☁️", max: "26", min: "18", rh: "70", pr: "0", wd: "北西", ws: "2.5" }, { w: "雨 🌧️", max: "22", min: "17", rh: "85", pr: "10", wd: "北", ws: "3.2" }, { w: "晴れ ☀️", max: "28", min: "19", rh: "63", pr: "0", wd: "南東", ws: "2.4" }] },
+            "110000": { name: "埼玉県", forecasts: [{ w: "くもり ☁️", max: "26", min: "19", rh: "73", pr: "0", wd: "北東", ws: "2.8" }, { w: "雨 所により雷を伴う ⛈️", max: "23", min: "19", rh: "88", pr: "12", wd: "北", ws: "3.6" }, { w: "晴れ時々曇り ⛅", max: "28", min: "20", rh: "68", pr: "0", wd: "南東", ws: "2.5" }] },
+            "120000": { name: "千葉県", forecasts: [{ w: "くもり ☁️", max: "26", min: "21", rh: "76", pr: "0", wd: "北東", ws: "4.5" }, { w: "雨 🌧️", max: "24", min: "20", rh: "90", pr: "15", wd: "北東", ws: "5.5" }, { w: "曇り時々晴れ ⛅", max: "27", min: "21", rh: "80", pr: "0", wd: "南東", ws: "3.8" }] },
+            "130000": { name: "東京都", forecasts: [{ w: "くもり 夜のはじめ頃 雨 🌧️", max: "26", min: "21", rh: "75", pr: "2", wd: "北", ws: "3.0" }, { w: "雨 朝から雷を伴い激しく降る ⛈️", max: "24", min: "20", rh: "92", pr: "25", wd: "北東", ws: "4.5" }, { w: "大雨のち曇り ☔", max: "23", min: "19", rh: "85", pr: "18", wd: "北西", ws: "3.5" }] },
+            "140000": { name: "神奈川県", forecasts: [{ w: "くもり ☁️", max: "26", min: "21", rh: "74", pr: "1", wd: "北東", ws: "3.2" }, { w: "雨 🌧️", max: "24", min: "20", rh: "90", pr: "20", wd: "北東", ws: "4.8" }, { w: "曇りのち晴れ ⛅", max: "27", min: "21", rh: "78", pr: "0", wd: "南西", ws: "3.0" }] },
+            "150000": { name: "新潟県", forecasts: [{ w: "晴れ時々曇り ⛅", max: "26", min: "18", rh: "64", pr: "0", wd: "北西", ws: "2.6" }, { w: "くもり時々雨 🌧️", max: "23", min: "17", rh: "78", pr: "3", ws: "2.4", wd: "北" }, { w: "快晴 ☀️", max: "27", min: "18", rh: "58", pr: "0", wd: "南", ws: "2.8" }] },
+            "160000": { name: "富山県", forecasts: [{ w: "晴れ ☀️", max: "27", min: "18", rh: "61", pr: "0", wd: "北西", ws: "2.1" }, { w: "くもり ☁️", max: "24", min: "17", rh: "70", pr: "0", wd: "北東", ws: "1.8" }, { w: "快晴 ☀️", max: "28", min: "18", rh: "55", pr: "0", wd: "南", ws: "2.5" }] },
+            "170000": { name: "石川県", forecasts: [{ w: "晴れ ☀️", max: "27", min: "19", rh: "63", pr: "0", wd: "西", ws: "2.8" }, { w: "くもり ☁️", max: "24", min: "18", rh: "72", pr: "0", wd: "北東", ws: "2.0" }, { w: "快晴 ☀️", max: "28", min: "19", rh: "56", pr: "0", wd: "南東", ws: "2.4" }] },
+            "180000": { name: "福井県", forecasts: [{ w: "晴れ時々曇り ⛅", max: "28", min: "19", rh: "65", pr: "0", wd: "北西", ws: "2.3" }, { w: "くもり ☁️", max: "25", min: "18", rh: "74", pr: "0", wd: "北東", ws: "1.9" }, { w: "晴れ ☀️", max: "29", min: "19", rh: "59", pr: "0", wd: "南東", ws: "2.2" }] },
+            "190000": { name: "山梨県", forecasts: [{ w: "くもり ☁️", max: "25", min: "17", rh: "68", pr: "0", wd: "南西", ws: "1.7" }, { w: "雨 🌧️", max: "22", min: "16", rh: "84", pr: "12", wd: "南", ws: "2.3" }, { w: "晴れ時々曇り ⛅", max: "27", min: "18", rh: "65", pr: "0", wd: "東", ws: "1.8" }] },
+            "200000": { name: "長野県", forecasts: [{ w: "晴れ時々曇り ⛅", max: "25", min: "15", rh: "62", pr: "0", wd: "北西", ws: "2.1" }, { w: "くもり時々雨 🌧️", max: "21", min: "14", rh: "76", pr: "4", wd: "北", ws: "1.8" }, { w: "晴れ ☀️", max: "26", min: "15", rh: "58", pr: "0", wd: "南東", ws: "2.3" }] },
+            "210000": { name: "岐阜県", forecasts: [{ w: "晴れ ☀️", max: "28", min: "18", rh: "60", pr: "0", wd: "西北西", ws: "2.5" }, { w: "くもり時々雨 🌧️", max: "24", min: "17", rh: "74", pr: "3", wd: "北東", ws: "2.0" }, { w: "快晴 ☀️", max: "29", min: "18", rh: "54", pr: "0", wd: "東南東", ws: "2.4" }] },
+            "220000": { name: "静岡県", forecasts: [{ w: "くもり ☁️", max: "27", min: "20", rh: "72", pr: "0", wd: "南西", ws: "3.1" }, { w: "雨 🌧️", max: "24", min: "19", rh: "88", pr: "15", wd: "南", ws: "4.0" }, { w: "曇りのち晴れ ⛅", max: "28", min: "20", rh: "74", pr: "0", wd: "西", ws: "2.9" }] },
+            "230000": { name: "愛知県（名古屋）", forecasts: [{ w: "晴れ ☀️", max: "28", min: "20", rh: "63", pr: "0", wd: "西北西", ws: "3.2" }, { w: "曇り時々雨 🌦️", max: "25", min: "19", rh: "76", pr: "2", wd: "北西", ws: "2.6" }, { w: "快晴 ☀️", max: "29", min: "18", rh: "53", pr: "0", wd: "西北西", ws: "3.0" }] },
+            "240000": { name: "三重県", forecasts: [{ w: "晴れ時々曇り ⛅", max: "28", min: "19", rh: "66", pr: "0", wd: "北西", ws: "2.8" }, { w: "くもり ☁️", max: "25", min: "19", rh: "75", pr: "0", wd: "北", ws: "2.0" }, { w: "晴れ ☀️", max: "29", min: "18", rh: "58", pr: "0", wd: "北西", ws: "2.5" }] },
+            "250000": { name: "滋賀県", forecasts: [{ w: "晴れ ☀️", max: "28", min: "18", rh: "61", pr: "0", wd: "北西", ws: "3.4" }, { w: "くもり ☁️", max: "25", min: "18", rh: "72", pr: "0", wd: "北", ws: "2.5" }, { w: "快晴 ☀️", max: "29", min: "17", rh: "54", pr: "0", wd: "西", ws: "3.0" }] },
+            "260000": { name: "京都府", forecasts: [{ w: "晴れ ☀️", max: "29", min: "19", rh: "59", pr: "0", wd: "北西", ws: "2.3" }, { w: "くもり ☁️", max: "26", min: "19", rh: "71", pr: "0", wd: "北", ws: "1.7" }, { w: "快晴 ☀️", max: "30", min: "18", rh: "52", pr: "0", wd: "東", ws: "2.1" }] },
+            "270000": { name: "大阪府", forecasts: [{ w: "晴れ時々曇り ⛅", max: "29", min: "22", rh: "62", pr: "0", wd: "西", ws: "3.5" }, { w: "くもり ☁️", max: "27", min: "21", rh: "73", pr: "1", wd: "北東", ws: "2.4" }, { w: "雨 🌧️", max: "24", min: "19", rh: "86", pr: "8", wd: "南西", ws: "3.8" }] },
+            "280000": { name: "兵庫県", forecasts: [{ w: "晴れ ☀️", max: "29", min: "21", rh: "61", pr: "0", wd: "西", ws: "3.6" }, { w: "くもり ☁️", max: "26", min: "20", rh: "70", pr: "0", wd: "北東", ws: "2.3" }, { w: "晴れ時々曇り ⛅", max: "28", min: "19", rh: "60", pr: "0", wd: "西", ws: "3.0" }] },
+
+                "290000": { name: "奈良県", forecasts: [{ w: "晴れ時々曇り ⛅", max: "28", min: "18", rh: "64", pr: "0", wd: "北西", ws: "2.1" }, { w: "くもり ☁️", max: "27", min: "18", rh: "74", pr: "0", wd: "北東", ws: "1.6" }, { w: "晴れ時々曇り ⛅", max: "28", min: "17", rh: "62", pr: "0", wd: "西", ws: "2.0" }] },
+            "300000": { name: "和歌山県", forecasts: [{ w: "晴れ ☀️", max: "29", min: "20", rh: "62", pr: "0", wd: "西", ws: "3.2" }, { w: "くもり ☁️", max: "26", min: "20", rh: "72", pr: "0", wd: "東", ws: "2.1" }, { w: "晴れ時々曇り ⛅", max: "29", min: "19", rh: "61", pr: "0", wd: "南西", ws: "2.8" }] },
+            "310000": { name: "鳥取県", forecasts: [{ w: "晴れ ☀️", max: "28", min: "18", rh: "60", pr: "0", wd: "西", ws: "2.9" }, { w: "くもり ☁️", max: "25", min: "17", rh: "70", pr: "0", wd: "東南東", ws: "1.8" }, { w: "快晴 ☀️", max: "28", min: "17", rh: "54", pr: "0", wd: "西", ws: "2.5" }] },
+            "320000": { name: "島根県", forecasts: [{ w: "晴れ時々曇り ⛅", max: "28", min: "19", rh: "63", pr: "0", wd: "北西", ws: "2.7" }, { w: "くもり ☁️", max: "25", min: "18", rh: "72", pr: "0", wd: "東", ws: "1.9" }, { w: "晴れ ☀️", max: "28", min: "18", rh: "58", pr: "0", wd: "南西", ws: "2.4" }] },
+            "330000": { name: "岡山県", forecasts: [{ w: "快晴 ☀️", max: "30", min: "19", rh: "57", pr: "0", wd: "西北西", ws: "2.6" }, { w: "晴れのち曇り ⛅", max: "28", min: "19", rh: "66", pr: "0", wd: "北東", ws: "1.9" }, { w: "くもり ☁️", max: "26", min: "18", rh: "70", pr: "0", wd: "東", ws: "2.2" }] },
+            "340000": { name: "広島県", forecasts: [{ w: "快晴 ☀️", max: "30", min: "21", rh: "58", pr: "0", wd: "南西", ws: "3.0" }, { w: "晴れのち曇り ⛅", max: "28", min: "20", rh: "65", pr: "0", wd: "北東", ws: "2.1" }, { w: "くもり ☁️", max: "26", min: "18", rh: "69", pr: "0", wd: "東", ws: "2.3" }] },
+            "350000": { name: "山口県", forecasts: [{ w: "晴れ ☀️", max: "29", min: "20", rh: "61", pr: "0", wd: "西", ws: "3.2" }, { w: "くもり ☁️", max: "26", min: "19", rh: "72", pr: "0", wd: "東南東", ws: "2.0" }, { w: "晴れ ⛅", max: "28", min: "18", rh: "62", pr: "0", wd: "南西", ws: "2.7" }] },
+            "360000": { name: "徳島県", forecasts: [{ w: "晴れ ☀️", max: "28", min: "20", rh: "64", pr: "0", wd: "東", ws: "2.8" }, { w: "くもり時々雨 🌧️", max: "25", min: "20", rh: "78", pr: "4", wd: "北東", ws: "2.1" }, { w: "晴れ ⛅", max: "28", min: "19", rh: "66", pr: "0", wd: "南東", ws: "2.5" }] },
+            "370000": { name: "香川県", forecasts: [{ w: "晴れ ☀️", max: "29", min: "21", rh: "62", pr: "0", wd: "西北西", ws: "2.9" }, { w: "くもり時々雨 🌧️", max: "26", min: "20", rh: "76", pr: "3", wd: "北東", ws: "2.2" }, { w: "晴れ ⛅", max: "28", min: "18", rh: "64", pr: "0", wd: "南東", ws: "2.4" }] },
+            "380000": { name: "愛媛県", forecasts: [{ w: "晴れ時々曇り ⛅", max: "29", min: "20", rh: "63", pr: "0", wd: "北西", ws: "2.4" }, { w: "くもり ☁️", max: "26", min: "19", rh: "73", pr: "0", wd: "東", ws: "1.8" }, { w: "快晴 ☀️", max: "29", min: "18", rh: "56", pr: "0", wd: "南西", ws: "2.2" }] },
+            "390000": { name: "高知県", forecasts: [{ w: "快晴 ☀️", max: "30", min: "20", rh: "60", pr: "0", wd: "東北東", ws: "3.1" }, { w: "曇りのち雨 🌧️", max: "27", min: "20", rh: "82", pr: "18", wd: "東", ws: "2.5" }, { w: "晴れ ⛅", max: "29", min: "19", rh: "65", pr: "0", wd: "西", ws: "2.8" }] },
+            "400000": { name: "福岡県", forecasts: [{ w: "くもり時々晴れ ⛅", max: "28", min: "22", rh: "66", pr: "0", wd: "北北西", ws: "3.4" }, { w: "雨のち曇り 🌧️", max: "24", min: "19", rh: "84", pr: "10", wd: "北", ws: "2.9" }, { w: "快晴 ☀️", max: "29", min: "18", rh: "55", pr: "0", wd: "南東", ws: "3.2" }] },
+            "410000": { name: "佐賀県", forecasts: [{ w: "晴れ時々曇り ⛅", max: "29", min: "21", rh: "64", pr: "0", wd: "西北西", ws: "2.8" }, { w: "雨のち晴れ 🌧️", max: "25", min: "20", rh: "80", pr: "6", wd: "北", ws: "2.3" }, { w: "快晴 ☀️", max: "29", min: "19", rh: "53", pr: "0", wd: "南西", ws: "2.6" }] },
+            "420000": { name: "長崎県", forecasts: [{ w: "くもり時々晴れ ⛅", max: "28", min: "22", rh: "68", pr: "0", wd: "北西", ws: "3.8" }, { w: "雨 🌧️", max: "25", min: "21", rh: "86", pr: "14", wd: "北", ws: "3.2" }, { w: "晴れ ☀️", max: "29", min: "20", rh: "59", pr: "0", wd: "南西", ws: "3.5" }] },
+            "430000": { name: "熊本県", forecasts: [{ w: "晴れ ☀️", max: "30", min: "21", rh: "61", pr: "0", wd: "西", ws: "2.4" }, { w: "雨のち曇り 🌧️", max: "26", min: "20", rh: "82", pr: "8", wd: "北東", ws: "1.9" }, { w: "快晴 ☀️", max: "30", min: "19", rh: "54", pr: "0", wd: "南西", ws: "2.2" }] },
+            "440000": { name: "大分県", forecasts: [{ w: "晴れ時々曇り ⛅", max: "28", min: "20", rh: "65", pr: "0", wd: "西北西", ws: "2.5" }, { w: "くもり時々雨 🌧️", max: "25", min: "19", rh: "76", pr: "3", wd: "北", ws: "2.0" }, { w: "晴れ ☀️", max: "29", min: "18", rh: "58", pr: "0", wd: "南南東", ws: "2.3" }] },
+            "450000": { name: "宮崎県", forecasts: [{ w: "快晴 ☀️", max: "30", min: "21", rh: "62", pr: "0", wd: "西", ws: "2.6" }, { w: "曇りのち雨 🌧️", max: "27", min: "21", rh: "80", pr: "12", wd: "東", ws: "2.0" }, { w: "晴れ ⛅", max: "29", min: "20", rh: "64", pr: "0", wd: "西", ws: "2.4" }] },
+            "460000": { name: "鹿児島県", forecasts: [{ w: "晴れ ☀️", max: "30", min: "23", rh: "63", pr: "0", wd: "西北西", ws: "3.5" }, { w: "雨のち曇り 🌧️", max: "27", min: "22", rh: "83", pr: "10", wd: "北", ws: "2.8" }, { w: "快晴 ☀️", max: "31", min: "21", rh: "56", pr: "0", wd: "南西", ws: "3.2" }] },
+            "470000": { name: "沖縄県（那覇）", forecasts: [{ w: "晴れ時々くもり ⛅", max: "32", min: "27", rh: "74", pr: "0", wd: "南東", ws: "4.5" }, { w: "スコールあり 🌦️", max: "31", min: "26", rh: "82", pr: "6", wd: "東南東", ws: "5.0" }, { w: "快晴 ☀️", max: "33", min: "27", rh: "68", pr: "0", wd: "南東", ws: "4.2" }] }
         };
     </script>
 
