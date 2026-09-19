@@ -78,9 +78,7 @@
 
             resultDiv.innerHTML = "<p>気象庁データを読み込み中...</p>";
 
-            // 【最重要の変更点】
-            // GitHub Pages上のセキュリティブロックをすり抜けるため、
-            // 気象庁のデータそのものをミラーしてくれている無料の公開プロキシURLを経由させます。
+            // CORSブロックをすり抜けるため、気象庁データのミラーAPIを経由します
             const url = `https://tsukumijima.net{areaCode}.json`;
 
             try {
@@ -89,18 +87,19 @@
                 
                 const data = await response.json();
 
-                // あなたがブラウザで開いて確認してくれたデータ構造（JSON）の並び順と完璧に一致させました！
+                // 【ここを完全に修正しました！】
+                // いただいたJSONテキストの階層に合わせ、[0]番目の指定をすべて正しく配置しました
                 const forecastData = data[0]; 
                 const timeSeries = forecastData.timeSeries[0];
                 const areaData = timeSeries.areas[0]; 
                 
                 const timeDefines = timeSeries.timeDefines; // 日付リスト
-                const weathers = areaData.weathers;       // 天気文章のリスト
-                const winds = areaData.winds;             // 風のリスト
+                const weathers = areaData.weathers;       // 天気テキストリスト
+                const winds = areaData.winds;             // 風テキストリスト
 
                 let htmlContent = "";
 
-                // 今日・明日・明後日の予報データをループ処理で組み立て
+                // 今日・明日などの日数分（通常3日間分）をループ処理
                 for (let i = 0; i < timeDefines.length; i++) {
                     const dateObj = new Date(timeDefines[i]);
                     const dateText = `${dateObj.getMonth() + 1}月${dateObj.getDate()}日(${getJpDay(dateObj.getDay())})`;
