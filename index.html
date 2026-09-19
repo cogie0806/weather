@@ -7,55 +7,113 @@
     <link rel="icon" href="cogie0806.jpg" type="image/jpeg">
     <style>
         body {
-            font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', Meiryo, sans-serif;
-            background: linear-gradient(135deg, #a1c4fd, #c2e9fb);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', Meiryo, sans-serif;
+            background: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%);
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
             margin: 0;
             color: #333;
-            padding: 20px;
+            padding: 16px;
             box-sizing: border-box;
         }
         .container {
-            background: white;
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            background: rgba(255, 255, 255, 0.95);
+            padding: 24px;
+            border-radius: 24px;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
             text-align: center;
             width: 100%;
             max-width: 400px;
+            backdrop-filter: blur(10px);
         }
-        h1 { font-size: 22px; margin-bottom: 20px; color: #444; }
+        h1 {
+            font-size: 24px;
+            margin: 0 0 4px 0;
+            color: #1d1d1f;
+            font-weight: 700;
+        }
+        .subtitle {
+            font-size: 13px;
+            color: #86868b;
+            margin: 0 0 24px 0;
+            font-weight: 500;
+        }
         select {
             width: 100%;
-            padding: 12px;
+            padding: 14px 16px;
             font-size: 16px;
-            border-radius: 8px;
-            border: 1px solid #ccc;
-            margin-bottom: 20px;
-            background-color: #f9f9f9;
+            border-radius: 14px;
+            border: 1px solid #e5e5ea;
+            margin-bottom: 16px;
+            background-color: #f5f5f7;
+            color: #1d1d1f;
             cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            -webkit-appearance: none;
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://w3.org' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%2386868b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 16px center;
+            background-size: 16px;
+        }
+        select:focus {
+            outline: none;
+            border-color: #0071e3;
+            background-color: #fff;
+            box-shadow: 0 0 0 4px rgba(0, 113, 227, 0.15);
+        }
+        .result-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1d1d1f;
+            margin: 24px 0 8px 0;
+            text-align: left;
+            padding-left: 4px;
         }
         .weather-box {
-            margin-top: 15px;
-            padding: 15px;
-            border-bottom: 1px solid #eee;
+            background: #fff;
+            margin-top: 12px;
+            padding: 16px;
+            border-radius: 16px;
+            border: 1px solid #f5f5f7;
             text-align: left;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
         }
-        .weather-box:last-child { border-bottom: none; }
-        .date { font-weight: bold; color: #555; margin-bottom: 5px; }
-        .telop { font-size: 20px; font-weight: bold; color: #007bff; margin: 5px 0; }
-        .temp { font-size: 15px; color: #e74c3c; font-weight: bold; }
+        .date {
+            font-size: 14px;
+            font-weight: 600;
+            color: #86868b;
+        }
+        .telop {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1d1d1f;
+            display: flex;
+            align-items: center;
+            margin: 2px 0;
+        }
+        .temp-container {
+            display: flex;
+            gap: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            margin-top: 2px;
+        }
+        .max-temp { color: #ff3b30; }
+        .min-temp { color: #0071e3; }
     </style>
 </head>
 <body>
 
     <div class="container">
         <h1>cogie0806天気</h1>
-        <p>国土交通省気象庁　予報</p>
-　
+        <div class="subtitle">国土交通省気象庁 予報</div>
         
         <select id="areaSelect" onchange="fetchWeather()">
             <option value="">-- 都道府県を選択してください --</option>
@@ -124,6 +182,15 @@
     </div>
 
     <script>
+        // 画面が開いた瞬間に、記憶されている都道府県があれば自動で表示するプログラム
+        window.onload = function() {
+            const savedArea = localStorage.getItem('savedAreaCode');
+            if (savedArea) {
+                document.getElementById("areaSelect").value = savedArea;
+                fetchWeather();
+            }
+        }
+
         function fetchWeather() {
             const areaCode = document.getElementById("areaSelect").value;
             const resultDiv = document.getElementById("forecastResult");
@@ -133,8 +200,11 @@
                 return;
             }
 
+            // 【新機能】選んだ場所のエリアコードをスマホのメモリに記憶
+            localStorage.setItem('savedAreaCode', areaCode);
+
             const data = weatherDatabase[areaCode];
-            let htmlContent = `<h3>🗺️ ${data.name} の予報</h3>`;
+            let htmlContent = `<div class="result-title">🗺️ ${data.name} の予報</div>`;
 
             for (let i = 0; i < data.forecasts.length; i++) {
                 const f = data.forecasts[i];
@@ -144,7 +214,10 @@
                     <div class="weather-box">
                         <div class="date">${dateText}</div>
                         <div class="telop">${f.w}</div>
-                        <div class="temp">📊 最高: ${f.max}°C / 📉 最低: ${f.min}°C</div>
+                        <div class="temp-container">
+                            <span class="max-temp">📈 最高: ${f.max}°C</span>
+                            <span class="min-temp">📉 最低: ${f.min}°C</span>
+                        </div>
                     </div>
                 `;
             }
