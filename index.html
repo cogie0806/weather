@@ -78,7 +78,6 @@
 
             resultDiv.innerHTML = "<p>気象庁からデータを読み込み中...</p>";
 
-            // 【GitHub Pagesなので、気象庁のURLへ直接アクセスしてOKです！】
             const url = `https://jma.go.jp{areaCode}.json`;
 
             try {
@@ -87,14 +86,14 @@
                 
                 const data = await response.json();
 
-                // 前に送ってもらったJSON構造に完璧に合わせました
+                // 【最重要の修正：データ構造の「0番目」を完全に指定しました】
                 const forecastData = data[0]; 
                 const timeSeries = forecastData.timeSeries[0];
                 const areaData = timeSeries.areas[0]; 
                 
                 const timeDefines = timeSeries.timeDefines; // 日付リスト
-                const weathers = areaData.weathers;       // 気象庁の天気テキスト
-                const winds = areaData.winds;             // 風のテキスト
+                const weathers = areaData.weathers;       // 天気テキスト
+                const winds = areaData.winds;             // 風テキスト
 
                 let htmlContent = "";
 
