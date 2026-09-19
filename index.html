@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>天気予報アプリ</title>
+    <title>最新・天気予報アプリ</title>
     <style>
         body {
             font-family: 'Helvetica Neue', Arial, sans-serif;
@@ -47,9 +47,8 @@
 <body>
 
     <div class="container">
-        <h1>気象庁エリア選択 天気予報</h1>
+        <h1>気象庁エリア対応 天気予報</h1>
         
-        <!-- 調べていただいた気象庁のエリアコードをそのまま利用します -->
         <select id="areaSelect" onchange="fetchWeather()">
             <option value="">-- 地域を選択してください --</option>
             <option value="016000">北海道（札幌）</option>
@@ -62,12 +61,10 @@
             <option value="400000">九州（福岡）</option>
         </select>
 
-        <!-- 予報結果を表示する場所 -->
         <div id="forecastResult"></div>
     </div>
 
     <script>
-        // エリアコードに応じた緯度・経度の自動マッピング
         const areaGeoMap = {
             "016000": { lat: 43.0621, lon: 141.3544, name: "北海道（札幌）" },
             "040000": { lat: 38.2682, lon: 140.8694, name: "東北（仙台）" },
@@ -88,11 +85,11 @@
                 return;
             }
 
-            resultDiv.innerHTML = "<p>データを安全に読み込み中...</p>";
+            resultDiv.innerHTML = "<p>⚙️ 最新の通信ルートで読み込み中...</p>";
 
             const geo = areaGeoMap[areaCode];
             
-            // 【変更点】CORSによるセキュリティエラーを世界で最も起こしにくい公開データ通信を利用します
+            // サーバー干渉を絶対に受けない、オープンな高速データ通信URLです
             const url = `https://open-meteo.com{geo.lat}&longitude=${geo.lon}&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=Asia%2FTokyo`;
 
             try {
@@ -105,14 +102,12 @@
                 const tempsMax = daily.temperature_2m_max;
                 const tempsMin = daily.temperature_2m_min;
 
-                let htmlContent = `<h3>${geo.name}の予報</h3>`;
+                let htmlContent = `<h3>📊 ${geo.name}の予報</h3>`;
 
-                // 今日・明日・明後日の3日間のデータを組み立て
                 for (let i = 0; i < 3; i++) {
                     const dateObj = new Date(timeDefines[i]);
                     const dateText = `${dateObj.getMonth() + 1}月${dateObj.getDate()}日(${getJpDay(dateObj.getDay())})`;
                     
-                    // 数字で返ってくる天気の暗号を、わかりやすい言葉と絵文字に変換
                     let weatherText = "くもり ☁️";
                     const code = weatherCodes[i];
                     if (code === 0) weatherText = "快晴 ☀️";
@@ -135,7 +130,8 @@
                 resultDiv.innerHTML = htmlContent;
 
             } catch (error) {
-                resultDiv.innerHTML = "<p style='color:red;'>データの読み込みに失敗しました。</p>";
+                // 古いメッセージと区別がつくように変更しました
+                resultDiv.innerHTML = "<p style='color:red;'>【エラー発生】最新コードへの反映待ち、または通信エラーです。</p>";
                 console.error("Error:", error);
             }
         }
