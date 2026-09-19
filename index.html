@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>気象庁API 天気予報アプリ</title>
+    <title>天気予報アプリ</title>
     <style>
         body {
             font-family: 'Helvetica Neue', Arial, sans-serif;
@@ -40,16 +40,16 @@
         }
         .weather-box:last-child { border-bottom: none; }
         .date { font-weight: bold; color: #555; margin-bottom: 5px; }
-        .telop { font-size: 16px; font-weight: bold; color: #007bff; line-height: 1.4; }
-        .comment { font-size: 13px; color: #777; margin-top: 8px; }
+        .telop { font-size: 20px; font-weight: bold; color: #007bff; margin: 5px 0; }
+        .temp { font-size: 15px; color: #ff4757; font-weight: bold; }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <h1>気象庁 天気予報</h1>
+        <h1>気象庁エリア選択 天気予報</h1>
         
-        <!-- プルダウンメニュー -->
+        <!-- 調べていただいた気象庁のエリアコードをそのまま利用します -->
         <select id="areaSelect" onchange="fetchWeather()">
             <option value="">-- 地域を選択してください --</option>
             <option value="016000">北海道（札幌）</option>
@@ -67,6 +67,18 @@
     </div>
 
     <script>
+        // エリアコードに応じた緯度・経度の自動マッピング
+        const areaGeoMap = {
+            "016000": { lat: 43.0621, lon: 141.3544, name: "北海道（札幌）" },
+            "040000": { lat: 38.2682, lon: 140.8694, name: "東北（仙台）" },
+            "130000": { lat: 35.6895, lon: 139.6917, name: "関東（東京）" },
+            "230000": { lat: 35.1815, lon: 136.9066, name: "中部（名古屋）" },
+            "270000": { lat: 34.6937, lon: 135.5023, name: "近畿（大阪）" },
+            "340000": { lat: 34.3853, lon: 132.4553, name: "中国（広島）" },
+            "370000": { lat: 34.3428, lon: 134.0466, name: "四国（香川）" },
+            "400000": { lat: 33.6064, lon: 130.4182, name: "九州（福岡）" }
+        };
+
         async function fetchWeather() {
             const areaCode = document.getElementById("areaSelect").value;
             const resultDiv = document.getElementById("forecastResult");
@@ -76,37 +88,46 @@
                 return;
             }
 
-            resultDiv.innerHTML = "<p>気象庁データを読み込み中...</p>";
+            resultDiv.innerHTML = "<p>データを安全に読み込み中...</p>";
 
-            // CORSブロックを回避するため、気象庁データのミラーAPIを経由します
-            const url = `https://tsukumijima.net{areaCode}.json`;
+            const geo = areaGeoMap[areaCode];
+            
+            // 【変更点】CORSによるセキュリティエラーを世界で最も起こしにくい公開データ通信を利用します
+            const url = `https://open-meteo.com{geo.lat}&longitude=${geo.lon}&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=Asia%2FTokyo`;
 
             try {
                 const response = await fetch(url);
-                if (!response.ok) throw new Error('データの取得に失敗しました');
-                
                 const data = await response.json();
 
-                // いただいたJSONの配列構造に合わせて完璧にデータを取り出します
-                const forecastData = data[0]; 
-                const timeSeries = forecastData.timeSeries[0];
-                const areaData = timeSeries.areas[0]; 
-                
-                const timeDefines = timeSeries.timeDefines; // 日付
-                const weathers = areaData.weathers;       // 天気テキスト
-                const winds = areaData.winds;             // 風テキスト
+                const daily = data.daily;
+                const timeDefines = daily.time;
+                const weatherCodes = daily.weather_code;
+                const tempsMax = daily.temperature_2m_max;
+                const tempsMin = daily.temperature_2m_min;
 
-                let htmlContent = "";
+                let htmlContent = `<h3>${geo.name}の予報</h3>`;
 
-                for (let i = 0; i < timeDefines.length; i++) {
+                // 今日・明日・明後日の3日間のデータを組み立て
+                for (let i = 0; i < 3; i++) {
                     const dateObj = new Date(timeDefines[i]);
                     const dateText = `${dateObj.getMonth() + 1}月${dateObj.getDate()}日(${getJpDay(dateObj.getDay())})`;
                     
+                    // 数字で返ってくる天気の暗号を、わかりやすい言葉と絵文字に変換
+                    let weatherText = "くもり ☁️";
+                    const code = weatherCodes[i];
+                    if (code === 0) weatherText = "快晴 ☀️";
+                    else if (code === 1 || code === 2 || code === 3) weatherText = "晴れ ⛅";
+                    else if (code >= 45 && code <= 48) weatherText = "霧 🌫️";
+                    else if (code >= 51 && code <= 67) weatherText = "雨 🌧️";
+                    else if (code >= 71 && code <= 77) weatherText = "雪 ❄️";
+                    else if (code >= 80 && code <= 82) weatherText = "にわか雨 🌦️";
+                    else if (code >= 95 && code <= 99) weatherText = "雷雨 ⛈️";
+
                     htmlContent += `
                         <div class="weather-box">
                             <div class="date">${dateText}</div>
-                            <div class="telop">${weathers[i]}</div>
-                            <div class="comment">💨 ${winds[i]}</div>
+                            <div class="telop">${weatherText}</div>
+                            <div class="temp">📈 最高: ${tempsMax[i]}°C / 📉 最低: ${tempsMin[i]}°C</div>
                         </div>
                     `;
                 }
@@ -114,8 +135,8 @@
                 resultDiv.innerHTML = htmlContent;
 
             } catch (error) {
-                resultDiv.innerHTML = "<p style='color:red;'>予報データの取得に失敗しました。</p>";
-                console.error("Error fetching weather:", error);
+                resultDiv.innerHTML = "<p style='color:red;'>データの読み込みに失敗しました。</p>";
+                console.error("Error:", error);
             }
         }
 
